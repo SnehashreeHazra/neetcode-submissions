@@ -1,34 +1,44 @@
-class WordDictionary {
-    constructor() {
-        this.children = {};
-        this.isEnd = false;
-    }
-
-    addWord(word) {
-        let node = this;
-        for (const char of word) {
-            if (!node.children[char]) {
-                node.children[char] = new WordDictionary();
+class Solution {
+    findWords(board, words) {
+        const root = {};
+        for (const word of words) {
+            let node = root;
+            for (const ch of word) {
+                if (!node[ch]) node[ch] = {};
+                node = node[ch];
             }
-            node = node.children[char];
+            node["END"] = word;
         }
-        node.isEnd = true;
-    }
 
-    search(word) {
-        let node = this;
-        for (let i = 0; i < word.length; i++) {
-            const char = word[i];
-            if (char === '.') {
-                // Try all possible children recursively
-                for (const child of Object.values(node.children)) {
-                    if (child.search(word.slice(i + 1))) return true;
-                }
-                return false;
+        const rows = board.length;
+        const cols = board[0].length;
+        const result = [];
+
+        const dfs = (r, c, node) => {
+            if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+            const ch = board[r][c];
+            if (ch === "#" || !node[ch]) return;
+
+            const next = node[ch];
+            if (next["END"]) {
+                result.push(next["END"]);
+                delete next["END"];
             }
-            if (!node.children[char]) return false;
-            node = node.children[char];
+
+            board[r][c] = "#";
+            dfs(r + 1, c, next);
+            dfs(r - 1, c, next);
+            dfs(r, c + 1, next);
+            dfs(r, c - 1, next);
+            board[r][c] = ch;
+        };
+
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                dfs(r, c, root);
+            }
         }
-        return node.isEnd;
+
+        return result;
     }
 }
